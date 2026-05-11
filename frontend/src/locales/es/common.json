@@ -1,0 +1,26 @@
+{
+  "appName": "ConsultaDO",
+  "loading": "Cargando...",
+  "error": "Ocurrió un error",
+  "save": "Guardar",
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+  "edit": "Editar",
+  "create": "Crear",
+  "close": "Cerrar",
+  "confirm": "Confirmar",
+  "back": "Volver",
+  "logout": "Cerrar sesión",
+  "documents": "Documentos",
+  "conversations": "Conversaciones",
+  "theme": {
+    "light": "Tema claro",
+    "dark": "Tema oscuro",
+    "toggle": "Cambiar tema"
+  },
+  "language": {
+    "es": "Español",
+    "en": "English",
+    "select": "Idioma"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "title": "Documentos",
+  "upload": "Subir documento",
+  "uploading": "Subiendo...",
+  "dragDrop": "Arrastra un archivo aquí",
+  "orClick": "o haz clic para seleccionar",
+  "supportedFormats": "PDF, DOCX, TXT, MD — máx 50MB",
+  "status": {
+    "pending": "Pendiente",
+    "indexing": "Indexando...",
+    "indexed": "Indexado",
+    "error": "Error"
+  },
+  "deleteConfirm": "¿Eliminar este documento?",
+  "noDocuments": "Sin documentos",
+  "noDocumentsHint": "Sube documentos para poder consultarlos",
+  "docInfo": "Información del documento",
+  "docInfoTitle": "Detalles",
+  "docInfoType": "Tipo detectado",
+  "docInfoConfidence": "Confianza",
+  "docInfoSize": "Tamaño",
+  "docInfoChunks": "Chunks indexados",
+  "docInfoStatus": "Estado"
+}

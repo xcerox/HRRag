@@ -1,0 +1,43 @@
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ──────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Environment variables ─────────────────────────────────
+.env
+!.env.example
+
+# ── Uploads / storage ────────────────────────────────────
+backend/storage/
+
+# ── Node ──────────────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.cache/
+
+# ── OS ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Claude Code ───────────────────────────────────────────
+.claude/
+
+# ── IDEs ──────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Logs ──────────────────────────────────────────────────
+*.log

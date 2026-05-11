@@ -1,0 +1,16 @@
+{
+  "title": "Temas",
+  "newTopic": "Nuevo tema",
+  "createTopic": "Crear tema",
+  "editTopic": "Editar tema",
+  "deleteTopic": "Eliminar tema",
+  "confirmDelete": "¿Eliminar este tema? Se eliminarán todos sus documentos y conversaciones.",
+  "namePlaceholder": "Nombre del tema",
+  "descriptionPlaceholder": "Descripción (opcional)",
+  "colorLabel": "Color",
+  "noTopics": "Sin temas aún",
+  "noTopicsHint": "Crea un tema para empezar",
+  "documents": "documentos",
+  "deleteSuccess": "Tema eliminado",
+  "createSuccess": "Tema creado"
+}

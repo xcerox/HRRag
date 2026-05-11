@@ -1,0 +1,24 @@
+{
+  "title": "Documents",
+  "upload": "Upload document",
+  "uploading": "Uploading...",
+  "dragDrop": "Drag a file here",
+  "orClick": "or click to select",
+  "supportedFormats": "PDF, DOCX, TXT, MD — max 50MB",
+  "status": {
+    "pending": "Pending",
+    "indexing": "Indexing...",
+    "indexed": "Indexed",
+    "error": "Error"
+  },
+  "deleteConfirm": "Delete this document?",
+  "noDocuments": "No documents",
+  "noDocumentsHint": "Upload documents to start consulting them",
+  "docInfo": "Document information",
+  "docInfoTitle": "Details",
+  "docInfoType": "Detected type",
+  "docInfoConfidence": "Confidence",
+  "docInfoSize": "Size",
+  "docInfoChunks": "Indexed chunks",
+  "docInfoStatus": "Status"
+}

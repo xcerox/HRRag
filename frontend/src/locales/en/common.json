@@ -1,0 +1,26 @@
+{
+  "appName": "ConsultaDO",
+  "loading": "Loading...",
+  "error": "An error occurred",
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "create": "Create",
+  "close": "Close",
+  "confirm": "Confirm",
+  "back": "Back",
+  "logout": "Log out",
+  "documents": "Documents",
+  "conversations": "Conversations",
+  "theme": {
+    "light": "Light theme",
+    "dark": "Dark theme",
+    "toggle": "Toggle theme"
+  },
+  "language": {
+    "es": "Español",
+    "en": "English",
+    "select": "Language"
+  }
+}

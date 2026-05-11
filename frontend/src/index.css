@@ -1,0 +1,206 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Geist:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* ─── Brain thinking animation ───────────────────────────────────────────── */
+@keyframes brain-thinking {
+  0%   { filter: hue-rotate(0deg)   brightness(1);   transform: scale(1); }
+  25%  { filter: hue-rotate(90deg)  brightness(1.3); transform: scale(1.15); }
+  50%  { filter: hue-rotate(200deg) brightness(1.1); transform: scale(1); }
+  75%  { filter: hue-rotate(300deg) brightness(1.4); transform: scale(1.15); }
+  100% { filter: hue-rotate(360deg) brightness(1);   transform: scale(1); }
+}
+
+.brain-thinking {
+  display: inline-block;
+  animation: brain-thinking 1.6s ease-in-out infinite;
+}
+
+/* ─── Fade-in stagger for messages ───────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  animation: fade-up 0.22s ease-out both;
+}
+
+/* ─── Cursor blink ────────────────────────────────────────────────────────── */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: cursor-blink 0.9s step-start infinite;
+}
+
+/* ─── Shimmer loader ─────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position: 200% center; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    var(--muted-foreground) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% auto;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* ─── Sidebar slide-in ───────────────────────────────────────────────────── */
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.slide-in-left {
+  animation: slide-in-left 0.18s ease-out both;
+}
+
+/* ─── Dot pulse for search state ─────────────────────────────────────────── */
+@keyframes dot-pulse {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%            { transform: scale(1);   opacity: 1; }
+}
+
+.dot-pulse-0 { animation: dot-pulse 1.2s ease-in-out infinite 0ms; }
+.dot-pulse-1 { animation: dot-pulse 1.2s ease-in-out infinite 200ms; }
+.dot-pulse-2 { animation: dot-pulse 1.2s ease-in-out infinite 400ms; }
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-sans: 'Geist', system-ui, -apple-system, sans-serif;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-active: var(--active);
+    --color-active-foreground: var(--active-foreground);
+    --color-active-subtle: var(--active-subtle);
+    --color-active-subtle-foreground: var(--active-subtle-foreground);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* ─── Light theme: warm zinc with copper accent ───────────────────────────── */
+:root {
+    --background: #fafaf9;
+    --foreground: #1c1917;
+    --card: #ffffff;
+    --card-foreground: #1c1917;
+    --popover: #ffffff;
+    --popover-foreground: #1c1917;
+    --primary: #b45309;          /* amber-700 — warm copper */
+    --primary-foreground: #ffffff;
+    --secondary: #f5f5f4;
+    --secondary-foreground: #1c1917;
+    --muted: #f5f5f4;
+    --muted-foreground: #78716c;
+    --accent: #fef3c7;
+    --accent-foreground: #78350f;
+    --destructive: #dc2626;
+    --border: #e7e5e4;
+    --input: #e7e5e4;
+    --ring: #b45309;
+    --radius: 0.625rem;
+    --sidebar: #f5f5f4;
+    --sidebar-foreground: #1c1917;
+    --active: #b45309;
+    --active-foreground: #ffffff;
+    --active-subtle: #fef3c7;
+    --active-subtle-foreground: #78350f;
+    /* Extra semantic tokens */
+    --surface-elevated: #ffffff;
+    --surface-sunken: #f0efee;
+}
+
+/* ─── Dark theme: deep charcoal with warm copper accent ──────────────────── */
+.dark {
+    --background: #0f0e0d;
+    --foreground: #e7e5e4;
+    --card: #1c1917;
+    --card-foreground: #e7e5e4;
+    --popover: #1c1917;
+    --popover-foreground: #e7e5e4;
+    --primary: #d97706;          /* amber-600 — brighter copper in dark */
+    --primary-foreground: #0f0e0d;
+    --secondary: #1c1917;
+    --secondary-foreground: #e7e5e4;
+    --muted: #292524;
+    --muted-foreground: #a8a29e;
+    --accent: #292524;
+    --accent-foreground: #e7e5e4;
+    --destructive: #f87171;
+    --border: #292524;
+    --input: #292524;
+    --ring: #d97706;
+    --sidebar: #161412;
+    --sidebar-foreground: #e7e5e4;
+    --active: #d97706;
+    --active-foreground: #0f0e0d;
+    --active-subtle: #292524;
+    --active-subtle-foreground: #fde68a;
+    --surface-elevated: #1c1917;
+    --surface-sunken: #0a0908;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Geist', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Scrollbar refinement */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+}
+
+/* ─── Utility: display font ───────────────────────────────────────────────── */
+.font-display {
+  font-family: 'DM Serif Display', Georgia, serif;
+}

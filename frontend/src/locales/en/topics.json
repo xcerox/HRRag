@@ -1,0 +1,16 @@
+{
+  "title": "Topics",
+  "newTopic": "New topic",
+  "createTopic": "Create topic",
+  "editTopic": "Edit topic",
+  "deleteTopic": "Delete topic",
+  "confirmDelete": "Delete this topic? All documents and conversations will be removed.",
+  "namePlaceholder": "Topic name",
+  "descriptionPlaceholder": "Description (optional)",
+  "colorLabel": "Color",
+  "noTopics": "No topics yet",
+  "noTopicsHint": "Create a topic to get started",
+  "documents": "documents",
+  "deleteSuccess": "Topic deleted",
+  "createSuccess": "Topic created"
+}
