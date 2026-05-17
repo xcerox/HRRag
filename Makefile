@@ -1,4 +1,4 @@
-.PHONY: help db db-stop backend frontend install setup
+.PHONY: help db db-stop backend frontend mcp-stdio mcp-token install setup
 
 # ── Colors ──────────────────────────────────────────────────────────────────
 BOLD  := \033[1m
@@ -16,11 +16,17 @@ db: ## Start PostgreSQL + pgvector in background
 db-stop: ## Stop PostgreSQL
 	docker compose -f backend/docker-compose.yml stop postgres
 
-backend: ## Run FastAPI backend (requires db running)
+backend: ## Run FastAPI backend with MCP at /mcp/ (requires db running)
 	cd backend && uv run uvicorn main:app --reload --port 8000
 
 frontend: ## Run React frontend in dev mode
 	cd frontend && pnpm dev
+
+mcp-stdio: ## Run MCP server via stdio — for Claude Code / Claude Desktop
+	cd backend && HRRAG_TOKEN=$$(uv run python -c "from app.core.security import create_token; print(create_token('$$MCP_USER'))") uv run mcp_server.py
+
+mcp-token: ## Print a fresh JWT for use in ~/.mcphost.json or .mcp.json
+	@cd backend && uv run python -c "from app.core.security import create_token; print(create_token('$(or $(MCP_USER),admin@local.com)'))"
 
 # ── Setup ─────────────────────────────────────────────────────────────────────
 

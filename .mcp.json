@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "hrrag": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/Users/jreyes/workspace/python/HRRag/backend",
+        "mcp_server.py"
+      ],
+      "env": {
+        "HRRAG_TOKEN": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmcmFua0Bsb2NhbC5jb20iLCJleHAiOjE3Nzk1MDUxMjJ9.RnWPwcgNAcnQsexjutd8wt1QJTlIq9gOSOPCSwDAIRc"
+      }
+    }
+  }
+}

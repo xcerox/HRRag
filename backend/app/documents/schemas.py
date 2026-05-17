@@ -6,6 +6,7 @@ class DocumentResponse(BaseModel):
     id: str
     user_email: str
     original_name: str
+    doc_type: str | None
     file_size: int | None
     mime_type: str | None
     chunks_count: int

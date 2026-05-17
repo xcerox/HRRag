@@ -14,6 +14,21 @@ from app.documents.models import Document, DocumentChunk
 logger = logging.getLogger(__name__)
 
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
+
+DOC_TYPE_KEYWORDS: list[tuple[str, list[str]]] = [
+    ("ley",             ["ley", "lft", "codigo", "norma", "decreto", "reglamento_federal"]),
+    ("contrato",        ["contrato", "contract"]),
+    ("politica_interna",["politica", "policy", "manual", "procedimiento"]),
+    ("reglamento",      ["reglamento", "regulation"]),
+]
+
+
+def detect_doc_type(filename: str) -> str | None:
+    name = filename.lower()
+    for doc_type, keywords in DOC_TYPE_KEYWORDS:
+        if any(k in name for k in keywords):
+            return doc_type
+    return None
 ALLOWED_MIME_TYPES = {
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -87,7 +102,7 @@ def _build_parent_child(text: str, doc_id: str, user_email: str) -> tuple[list[d
 
 # ── Upload ────────────────────────────────────────────────────────────────────
 
-async def upload(user_email: str, file: UploadFile, db: AsyncSession, bg: BackgroundTasks) -> Document:
+async def upload(user_email: str, file: UploadFile, db: AsyncSession, bg: BackgroundTasks, doc_type: str | None = None) -> Document:
     ext = Path(file.filename or "").suffix.lower()
     if file.content_type not in ALLOWED_MIME_TYPES and ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail="Tipo de archivo no soportado")
@@ -102,11 +117,13 @@ async def upload(user_email: str, file: UploadFile, db: AsyncSession, bg: Backgr
     dest.mkdir(parents=True, exist_ok=True)
     (dest / saved_name).write_bytes(data)
 
+    resolved_doc_type = doc_type or detect_doc_type(file.filename or "")
     doc = Document(
         id=doc_id,
         user_email=user_email,
         filename=saved_name,
         original_name=file.filename or saved_name,
+        doc_type=resolved_doc_type,
         file_size=len(data),
         mime_type=file.content_type,
         chunks_count=0,

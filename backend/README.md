@@ -8,7 +8,8 @@ FastAPI REST API for conversational HR document querying using semantic retrieva
 
 ```
 backend/
-├── main.py                         # FastAPI app, CORS, routers, lifespan
+├── main.py                         # FastAPI app, CORS, routers, MCP mount, lifespan
+├── mcp_server.py                   # stdio entry point — used by Claude Code
 ├── pyproject.toml                  # Dependencies (uv)
 ├── .env                            # Environment variables (not committed)
 ├── .env.example                    # Variable template
@@ -17,7 +18,8 @@ backend/
     │   ├── config.py               # Settings via pydantic-settings (.env)
     │   ├── database.py             # SQLAlchemy engine, Base, init_db, get_db
     │   ├── security.py             # JWT (create/decode) + get_current_user dependency
-    │   └── embeddings.py           # embed_text / embed_texts via Ollama /api/embed
+    │   ├── embeddings.py           # embed_text / embed_texts via Ollama /api/embed
+    │   └── retrieval.py            # hybrid_retrieve() — shared by chat and MCP tools
     │
     ├── auth/                       # Email-only authentication
     │   ├── models.py               # User (email PK, created_at, last_login)
@@ -26,32 +28,47 @@ backend/
     │   └── router.py               # POST /auth/login  GET /auth/me
     │
     ├── documents/                  # Document management and indexing
-    │   ├── models.py               # Document, DocumentChunk (embedding vector(768))
-    │   ├── schemas.py              # DocumentResponse
-    │   ├── service.py              # upload, _index_document (bg task), delete
+    │   ├── models.py               # Document (+ doc_type), DocumentChunk (embedding vector(768))
+    │   ├── schemas.py              # DocumentResponse (+ doc_type)
+    │   ├── service.py              # upload (+ detect_doc_type), _index_document, delete
     │   ├── router.py               # GET/POST/DELETE /hr/documents
     │   └── processors/             # Text extraction per format
     │       ├── pdf.py              # PyMuPDF — text per page + tables → Markdown
     │       ├── docx.py             # python-docx — concatenated paragraphs
     │       └── text.py             # UTF-8 decode
     │
-    └── chat/                       # Conversational sessions and messages
-        ├── models.py               # ChatSession, ChatMessage
-        ├── schemas.py              # SessionResponse, MessageResponse, SourceChunk
-        ├── prompts.py              # Prompt templates keyed by language (en / es)
-        ├── service.py              # Session CRUD, _retrieve (hybrid RAG), stream_message
-        └── router.py               # CRUD /hr/sessions + POST stream
+    ├── chat/                       # Conversational sessions and messages
+    │   ├── models.py               # ChatSession, ChatMessage
+    │   ├── schemas.py              # SessionResponse, MessageResponse, SourceChunk
+    │   ├── prompts.py              # Prompt templates keyed by language (en / es)
+    │   ├── service.py              # Session CRUD, _retrieve (calls core/retrieval), stream_message
+    │   └── router.py               # CRUD /hr/sessions + POST stream
+    │
+    └── mcp/                        # MCP server — exposes RAG as structured tools
+        ├── server.py               # FastMCP instance, lifespan, 6 @mcp.tool() registrations
+        ├── auth.py                 # validate_token() — JWT auth without FastAPI Depends
+        ├── schemas.py              # ChunkResult, ChunkDetail, ContextResult, etc.
+        └── tools/
+            ├── search.py           # Hybrid semantic + FTS search
+            ├── get_chunk.py        # Direct chunk lookup, auto-resolves child→parent
+            ├── get_context.py      # Chunk + previous + next sibling
+            ├── compare.py          # Parallel search across all doc_types
+            ├── references.py       # Find chunks that reference a given chunk
+            └── documents.py        # List indexed documents
 ```
 
 ### Layer responsibilities
 
 | Layer | Owns | Does NOT own |
 |---|---|---|
-| `core/` | Config, DB engine, JWT, embeddings | Business logic |
+| `core/` | Config, DB engine, JWT, embeddings, retrieval | Business logic |
 | `*/models.py` | SQLAlchemy table definitions | Request/response validation |
 | `*/schemas.py` | Pydantic request/response shapes | DB access |
 | `*/service.py` | Business logic and DB access | HTTP, request validation |
 | `*/router.py` | HTTP routes, FastAPI dependencies | Direct business logic |
+| `mcp/` | MCP tools, auth, schemas | HTTP routing (handled by FastMCP) |
+
+No business module imports from another business module — all shared logic lives in `core/`.
 
 ---
 
@@ -70,6 +87,7 @@ documents
   user_email       VARCHAR  FK → users.email  CASCADE DELETE
   filename         VARCHAR                    # on-disk name (uuid + ext)
   original_name    VARCHAR                    # original upload filename
+  doc_type         VARCHAR  NULLABLE          # ley | contrato | politica_interna | reglamento
   file_size        INTEGER
   mime_type        VARCHAR
   chunks_count     INTEGER  DEFAULT 0
@@ -426,6 +444,75 @@ uv run uvicorn main:app --reload --port 8000
 Interactive API docs:
 - Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
 - ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+---
+
+## MCP server
+
+The backend exposes the RAG pipeline as an MCP server mounted at `POST /mcp/`. It supports two transports:
+
+### Streamable HTTP (mcphost, remote APIs)
+
+The server runs as part of the FastAPI process. `~/.mcphost.json`:
+
+```json
+{
+  "mcpServers": {
+    "hrrag": {
+      "type": "streamable",
+      "url": "http://localhost:8000/mcp/",
+      "headers": [
+        "Authorization: Bearer <your-jwt>"
+      ]
+    }
+  }
+}
+```
+
+Get a JWT:
+```bash
+curl -s -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@company.com"}' | jq -r .access_token
+```
+
+Run with mcphost + Ollama:
+```bash
+mcphost -m ollama:qwen2.5:14b
+```
+
+### stdio (Claude Code, local subprocess)
+
+`.mcp.json` in the project root:
+
+```json
+{
+  "mcpServers": {
+    "hrrag": {
+      "command": "uv",
+      "args": ["run", "--directory", "/path/to/HRRag/backend", "mcp_server.py"],
+      "env": {
+        "HRRAG_TOKEN": "<your-jwt>"
+      }
+    }
+  }
+}
+```
+
+Claude Code picks this up automatically when you open the project.
+
+### Available tools
+
+| Tool | Description |
+|---|---|
+| `search` | Hybrid semantic + FTS search. Returns parent chunks with score. |
+| `get_chunk` | Fetch a chunk by ID. Auto-resolves child → parent. |
+| `get_context` | Returns a chunk plus its previous and next siblings. |
+| `compare` | Runs `search` in parallel across all doc_types and groups results. |
+| `find_references` | Finds chunks that mention a given chunk by article number or name. |
+| `list_documents` | Lists all indexed documents for the authenticated user. |
+
+See [docs/mcp.md](../docs/mcp.md) for the full MCP reference.
 
 ---
 

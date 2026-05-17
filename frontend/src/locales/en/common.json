@@ -13,6 +13,12 @@
   "logout": "Log out",
   "documents": "Documents",
   "conversations": "Conversations",
+  "mcp": {
+    "title": "MCP Token",
+    "copy": "Copy token",
+    "copied": "Copied!",
+    "description": "Use it in Claude Code or mcphost to connect the RAG tools."
+  },
   "theme": {
     "light": "Light theme",
     "dark": "Dark theme",

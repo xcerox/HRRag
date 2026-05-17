@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -24,10 +24,11 @@ async def list_documents(
 async def upload_document(
     bg: BackgroundTasks,
     file: UploadFile = File(...),
+    doc_type: str | None = Form(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await service.upload(current_user.email, file, db, bg)
+    return await service.upload(current_user.email, file, db, bg, doc_type=doc_type)
 
 
 @router.delete("/{doc_id}", status_code=status.HTTP_204_NO_CONTENT)

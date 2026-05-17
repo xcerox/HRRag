@@ -132,21 +132,45 @@ Tokens are streamed back via SSE as they are generated. On completion, source ci
 
 ---
 
+## MCP server — use HRRag as an AI tool
+
+HRRag exposes its retrieval pipeline as a **Model Context Protocol (MCP) server**, so any MCP-compatible client (Claude Code, mcphost + Ollama, OpenAI Responses API) can call the RAG engine as a structured tool — without going through the chat UI.
+
+The server is mounted at `POST /mcp/` on the same FastAPI process and supports two connection modes:
+
+| Mode | How | When to use |
+|---|---|---|
+| **Streamable HTTP** | `http://localhost:8000/mcp/` | mcphost, remote APIs, multi-user |
+| **stdio** | subprocess via `uv run mcp_server.py` | Claude Code, local single-user |
+
+Available tools: `search`, `get_chunk`, `get_context`, `compare`, `find_references`, `list_documents`.
+
+See [docs/mcp.md](docs/mcp.md) for the full reference — how it works, both connection examples, auth, and how to add new tools.
+
+---
+
 ## Repository structure
 
 ```
 HRRag/
 ├── Makefile                    ← all common commands (run from repo root)
 ├── README.md                   ← this file
+├── .mcp.json                   ← Claude Code MCP config (stdio transport)
 ├── backend/
 │   ├── docker-compose.yml      ← PostgreSQL + pgvector (only external dependency)
 │   ├── .env.example            ← environment variable template
+│   ├── mcp_server.py           ← stdio entry point (used by Claude Code)
 │   ├── README.md               ← API reference, DB schema, pipelines, env vars
 │   └── app/
 │       ├── auth/               ← email-only JWT auth
 │       ├── documents/          ← upload, ingestion, chunking, embedding
 │       ├── chat/               ← sessions, messages, retrieval, streaming
-│       └── core/               ← config, DB engine, security, embeddings
+│       ├── core/               ← config, DB engine, security, embeddings, retrieval
+│       └── mcp/                ← MCP server, auth, schemas, tools
+│           ├── server.py       ← FastMCP instance, lifespan, 6 tool registrations
+│           ├── auth.py         ← JWT validation outside FastAPI dependency injection
+│           ├── schemas.py      ← Pydantic output types for all tools
+│           └── tools/          ← one module per tool
 └── frontend/
     ├── README.md               ← stack, component map, i18n guide, SSE flow
     └── src/
@@ -161,6 +185,7 @@ For deeper detail on each component, see the dedicated READMEs:
 
 - [backend/README.md](backend/README.md) — API reference, DB schema, full pipeline internals, all environment variables
 - [frontend/README.md](frontend/README.md) — component map, i18n guide, SSE streaming flow, state management
+- [docs/mcp.md](docs/mcp.md) — MCP server: how it works, connection examples, auth, adding tools
 
 ---
 

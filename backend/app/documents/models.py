@@ -16,6 +16,7 @@ class Document(Base):
     original_name: Mapped[str] = mapped_column(String, nullable=False)
     file_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
     mime_type: Mapped[str | None] = mapped_column(String, nullable=True)
+    doc_type: Mapped[str | None] = mapped_column(String, nullable=True)
     chunks_count: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(String, default="pending")
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=func.now())

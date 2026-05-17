@@ -62,7 +62,8 @@ frontend/
 │   └── components/
 │       ├── layout/
 │       │   ├── AppLayout.tsx        # Sidebar + main content shell
-│       │   ├── Sidebar.tsx          # Document list, session list, new session button
+│       │   ├── Sidebar.tsx          # Document list, session list, MCP panel, footer
+│       │   ├── McpTokenPanel.tsx    # Collapsible JWT copy panel (collapsed by default)
 │       │   ├── LanguageSwitcher.tsx # Globe dropdown — switches i18n language
 │       │   └── ThemeToggle.tsx      # Sun/Moon button — switches dark/light
 │       │
@@ -135,6 +136,17 @@ On `done`, TanStack Query invalidates `['session', sessionId]` and `['sessions']
 ```
 
 In production, point `VITE_API_BASE_URL` to the backend host.
+
+---
+
+## MCP token panel
+
+`McpTokenPanel` is a collapsible widget in the sidebar that shows the logged-in user's JWT for use with MCP clients. It is collapsed by default to save space.
+
+- **Collapsed**: shows a `Terminal` icon + "MCP" label + chevron.
+- **Expanded**: shows a short description, the first 28 characters of the token, and a copy button. The copy button shows a green checkmark for 2 seconds after copying.
+
+The token is read from `authStore` — no extra API call. If no token is present (user not logged in), the component renders nothing.
 
 ---
 

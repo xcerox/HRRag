@@ -8,6 +8,7 @@ import { useChatSessions, useCreateSession, useDeleteSession } from '@/hooks/use
 import { useChatStore } from '@/store/chatStore'
 import DocumentList from '@/components/documents/DocumentList'
 import DocumentUpload from '@/components/documents/DocumentUpload'
+import McpTokenPanel from './McpTokenPanel'
 import ThemeToggle from './ThemeToggle'
 import LanguageSwitcher from './LanguageSwitcher'
 import { cn } from '@/lib/utils'
@@ -142,6 +143,11 @@ export default function Sidebar() {
           {tch('newSession')}
         </button>
       </div>
+
+      <Separator className="shrink-0" />
+
+      {/* MCP Token */}
+      <McpTokenPanel />
 
       <Separator className="shrink-0" />
 
