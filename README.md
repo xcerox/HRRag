@@ -40,32 +40,38 @@ HRRag answers questions like:
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  Browser (React 19 + Vite)                              │
-│  • Chat UI with SSE streaming                           │
-│  • Document upload & status tracking                    │
-│  • EN/ES i18n, dark/light theme                        │
-└───────────────────────┬─────────────────────────────────┘
-                        │ HTTP / SSE
-┌───────────────────────▼─────────────────────────────────┐
-│  Backend (FastAPI + Python)                             │
-│  • REST API + JWT auth (email-only, no passwords)       │
-│  • Document ingestion pipeline (async background task)  │
-│  • Hybrid RAG retrieval pipeline                        │
-│  • Streaming LLM responses via Ollama                   │
-└──────────┬────────────────────────┬─────────────────────┘
-           │                        │
-┌──────────▼──────────┐   ┌─────────▼───────────────────┐
-│  PostgreSQL 17      │   │  Ollama (host-native)        │
-│  + pgvector         │   │  • qwen2.5:14b  (LLM)       │
-│                     │   │  • nomic-embed-text          │
-│  • Users            │   │    (embeddings, 768 dims)    │
-│  • Documents        │   └─────────────────────────────┘
-│  • DocumentChunks   │
-│    (HNSW cosine)    │
-│  • ChatSessions     │
-│  • ChatMessages     │
-└─────────────────────┘
+┌──────────────────────────────┐   ┌──────────────────────────────────────┐
+│  Browser (React 19 + Vite)   │   │  MCP Clients                         │
+│  • Chat UI + token streaming │   │  • Claude Code (stdio)               │
+│  • Document upload           │   │  • mcphost + Ollama (streamable HTTP)│
+│  • MCP token panel           │   │  • OpenAI / Anthropic API            │
+│  • EN/ES i18n, dark/light    │   └──────────────┬───────────────────────┘
+└──────────────┬───────────────┘                  │ POST /mcp/
+               │ HTTP / SSE tokens                │ JSON-RPC 2.0
+┌──────────────▼──────────────────────────────────▼───────────────────────┐
+│  Backend (FastAPI + Python)                                              │
+│                                                                          │
+│  REST API                          MCP Server (FastMCP)                 │
+│  • JWT auth (email-only)           • Mounted at /mcp/                   │
+│  • Document ingestion pipeline     • 6 tools: search, get_chunk,        │
+│  • Hybrid RAG retrieval            │           get_context, compare,    │
+│  • Streaming LLM via Ollama        │           find_references,         │
+│                                    │           list_documents           │
+│  core/retrieval.py ────────────────┘ (shared retrieval pipeline)        │
+└────────────┬──────────────────────────────────┬─────────────────────────┘
+             │                                  │
+┌────────────▼────────────┐         ┌───────────▼─────────────────────────┐
+│  PostgreSQL 17           │         │  Ollama (host-native)               │
+│  + pgvector              │         │  • qwen2.5:14b  (LLM)              │
+│                          │         │  • nomic-embed-text (embeddings)    │
+│  • users                 │         │    768 dims, asymmetric             │
+│  • documents (+ doc_type)│         └─────────────────────────────────────┘
+│  • document_chunks       │
+│    parents: context      │
+│    children: HNSW cosine │
+│  • chat_sessions         │
+│  • chat_messages         │
+└──────────────────────────┘
 ```
 
 All models run via **Ollama on the host** — no Docker container needed for inference. CPU inference works; a GPU significantly reduces response latency.
@@ -129,6 +135,44 @@ After retrieval, the LLM receives a prompt in the user's language (EN or ES) con
 - The current question
 
 Tokens are streamed back via SSE as they are generated. On completion, source citations (document name, page, excerpt) are sent in a final `done` event and displayed below the answer.
+
+---
+
+## Why MCP gives better answers than a plain RAG chat
+
+In the standard chat flow, the retrieval pipeline runs once per question and the LLM answers from whatever chunks it found. The LLM has no way to say "I need more context" or "let me check another document type" — it works with what retrieval gave it.
+
+With MCP, the model drives the retrieval loop itself:
+
+```
+User: "Does my contract give me more vacation days than the law requires?"
+
+Model thinks:
+  1. I need to know what the law says       → calls search("vacaciones", doc_type="ley")
+  2. I need to know what the contract says  → calls search("vacaciones", doc_type="contrato")
+     — or just calls compare("vacaciones")  → gets both at once, grouped by doc_type
+
+  3. The contract mentions "Art. 22 del reglamento"
+     → calls find_references(chunk_id) to find that article
+  4. Art. 22 is ambiguous without surrounding context
+     → calls get_context(chunk_id) to read the previous and next clauses
+
+  Model now has 4 targeted lookups. Answers with exact citations.
+```
+
+**Why the answers are more precise:**
+
+| | Chat RAG | MCP |
+|---|---|---|
+| Who drives retrieval | Pipeline (fixed, one-shot) | The model (iterative, adaptive) |
+| Searches per question | 1 hybrid search | As many as needed |
+| Can filter by doc type | Only if hardcoded | Yes — per call |
+| Can follow references | No | Yes — `find_references` + `get_context` |
+| Can compare doc types | No | Yes — `compare` runs all in parallel |
+| Context per result | ~2000-word parent chunk | Same, but model selects which to use |
+| Failure mode | Retrieves wrong chunks silently | Model can retry with a different query |
+
+The model treats the tools like a search engine it controls: it queries, reads the result, decides if it has enough, and queries again if not. A plain RAG pipeline cannot do this — it fires once and whatever comes back is what the LLM gets.
 
 ---
 
@@ -212,7 +256,7 @@ make setup
 
 ```bash
 make db        # PostgreSQL on port 5432 (Docker, background)
-make backend   # FastAPI on :8000
+make backend   # FastAPI on :8000 — REST API + MCP server at /mcp/
 make frontend  # React + Vite on :5173
 ```
 
@@ -224,6 +268,16 @@ make help      # list all available commands
 |---|---|
 | http://localhost:5173 | Web app |
 | http://localhost:8000/docs | Swagger API explorer |
+| http://localhost:8000/mcp/ | MCP server (Streamable HTTP) |
+
+### 4. Connect an MCP client (optional)
+
+```bash
+make mcp-token                        # generate a JWT for MCP clients
+make mcp-stdio MCP_USER=you@co.com   # launch stdio server for Claude Code
+```
+
+For mcphost + Ollama, set `~/.mcphost.json` — see [docs/mcp.md](docs/mcp.md).
 
 ---
 
